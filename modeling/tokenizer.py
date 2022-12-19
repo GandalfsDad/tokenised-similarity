@@ -15,7 +15,15 @@ class OpenAITokenizer:
         else:
             self._model = modelName
 
-    def tokenize(self, inputs):
+    def tokenize(self, inputs, max_requests = 500, max_tokens = 8192):
+
+        if len(inputs) > max_requests:
+            return np.concatenate([self.tokenize(inputs[i:i+max_requests], max_requests=max_requests, max_tokens=max_tokens) for i in range(0, len(inputs), max_requests)])
+
+        #assume 3 letters per token
+        if any([len(x) > max_tokens*3 for x in inputs]):
+            return self.tokenize([x[:max_tokens*3] for x in inputs], max_requests=max_requests, max_tokens=max_tokens)
+
         response = openai.Embedding.create(
             model=self._model,
             input=inputs)
